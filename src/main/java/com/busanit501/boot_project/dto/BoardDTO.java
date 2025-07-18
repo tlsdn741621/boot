@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -35,4 +36,7 @@ public class BoardDTO {
     // 서버에서, 문자열을 LocalDateTime 변경 하는 방법 밖에 없음.
     private LocalDateTime regDate;
     private LocalDateTime modDate;
+
+    // 첨부파일 이름 목록
+    private List<String> fileNames;
 }

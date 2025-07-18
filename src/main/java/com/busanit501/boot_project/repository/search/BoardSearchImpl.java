@@ -3,19 +3,25 @@ package com.busanit501.boot_project.repository.search;
 import com.busanit501.boot_project.domain.Board;
 import com.busanit501.boot_project.domain.QBoard;
 import com.busanit501.boot_project.domain.QReply;
+import com.busanit501.boot_project.dto.BoardImageDTO;
+import com.busanit501.boot_project.dto.BoardListAllDTO;
 import com.busanit501.boot_project.dto.BoardListReplyCountDTO;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPQLQuery;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 // 인터페이스이름 + Impl, 이름 규칙, 동일하게 작성,
 // QuerydslRepositorySupport : 부모클래스, Querydsl 사용하기 위한 도구함.
+@Log4j2
 public class BoardSearchImpl extends QuerydslRepositorySupport implements BoardSearch {
 
     public BoardSearchImpl() {
@@ -165,5 +171,102 @@ public class BoardSearchImpl extends QuerydslRepositorySupport implements BoardS
         long count = dtoQuery.fetchCount();
 
         return new PageImpl<>(dtoList,pageable,count);
+    }
+
+    // 1) 페이징 2) 검색 3) 댓글 갯수 4) 첨부이미지들
+    @Override
+    public Page<BoardListAllDTO> searchWithAll(String[] types, String keyword, Pageable pageable) {
+        // 순서1, 고정
+        QBoard board = QBoard.board; // (board)
+        QReply reply = QReply.reply; // (reply)
+        // 순서2, 고정
+        JPQLQuery<Board> boardJPQLQuery = from(board); // select .. from board
+
+        // 순서3,
+        // left join,-> 게시글의 댓글이 없는 경우도 표기해야함. 그래서, 사용함.
+        boardJPQLQuery.leftJoin(reply).on(reply.board.eq(board));
+
+        //------------검색조건, 위의 메서드에서 가져오기.--------------------
+        // 순서4, 옵션
+        // where 조건절 추가. 위의 내용 재사용.
+        // where 조건절 , BooleanBuilder 를 이용해서 조건 추가.
+        // select .. from board where ....
+        if ((types != null && types.length > 0) && keyword != null) {
+            // or , 조건, and 조건을 사용하기 싶다. 묶기도 쉽다.
+            BooleanBuilder builder = new BooleanBuilder();
+            // types = {"t","w","c"}
+            for(String type : types){
+                switch (type) {
+                    case "t":
+                        builder.or(board.title.contains(keyword));
+                        break;
+                    case "c":
+                        builder.or(board.content.contains(keyword));
+                        break;
+                    case "w":
+                        builder.or(board.writer.contains(keyword));
+                        break;
+                } // end switch
+            } // end for
+            boardJPQLQuery.where(builder); // select * from board where like %keyword%
+        } //end if
+        // bno >0 조건 추가히기.
+        boardJPQLQuery.where(board.bno.gt(0L));
+
+        //--------------검색조건, 위의 메서드에서 가져오기.------------------------------------------------
+
+        // 순서3-2
+        boardJPQLQuery.groupBy(board);
+
+        // 순서4,
+        // 페이징 적용.
+        getQuerydsl().applyPagination(pageable,boardJPQLQuery);
+
+        // boardJPQLQuery -> 기존 board 테이블 , reply 댓글 갯수 붙여 놓은 테이블,
+        //예)
+        // bno title(댓글 갯수포함) writer  regDate ->
+        // 이 내용들 boardJPQLQuery 들어가 있다.
+
+        // 순서 5, 추가 버전. 튜플을 이용해서, 자동 형변환,
+        JPQLQuery<Tuple> tupleJPQLQuery =  boardJPQLQuery.select(board,reply.countDistinct());
+
+        // 순서6,
+        List<Tuple> tupleList = tupleJPQLQuery.fetch();
+
+        // 엔티티 클래스 -> dto 변환 작업.
+        // 변환 작업  1) modelmapper 클래스 map 이용 했고,  수동 작업,
+        // 2) Projection bean 메서드 이용해서, 자동으로 형변환
+        // 3) Tuple 클래스 이용해서, 자동으로 형변환,
+
+        List<BoardListAllDTO> dtoList = tupleList.stream().map(tuple -> {
+            Board board1 = (Board) tuple.get(board);
+            long replyCount = tuple.get(1,Long.class);
+
+            BoardListAllDTO dto = BoardListAllDTO.builder()
+                    .bno(board1.getBno())
+                    .title(board1.getTitle())
+                    .writer(board1.getWriter())
+                    .regDate(board1.getRegDate())
+                    .replyCount(replyCount)
+                    .build();
+            // 추가로 ,첨부된 이미지 목록을 여기 붙이기 작업 예정.
+            // BoardImage : 엔티티 클래스 -> BoardImageDTO 처리 하기. 형변환
+            List<BoardImageDTO> imageDTOS = board1.getImageSet().stream()
+                    .sorted().map(boardImage -> BoardImageDTO.builder()
+                            .uuid(boardImage.getUuid())
+                            .fileName(boardImage.getFileName())
+                            .ord(boardImage.getOrd())
+                            .build()).collect(Collectors.toList());
+            dto.setBoardImages(imageDTOS);
+            // 추가로 ,첨부된 이미지 목록을 여기 붙이기 작업 예정.
+            return dto;
+        }).collect(Collectors.toList());
+
+        long totalCount = boardJPQLQuery.fetchCount();
+
+        return new PageImpl<>(dtoList,pageable,totalCount);
+
+
+
     }
 }

@@ -2,10 +2,7 @@ package com.busanit501.boot_project.service;
 
 
 import com.busanit501.boot_project.domain.Board;
-import com.busanit501.boot_project.dto.BoardDTO;
-import com.busanit501.boot_project.dto.BoardListReplyCountDTO;
-import com.busanit501.boot_project.dto.PageRequestDTO;
-import com.busanit501.boot_project.dto.PageResponseDTO;
+import com.busanit501.boot_project.dto.*;
 import com.busanit501.boot_project.repository.BoardRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +31,10 @@ public class BoardServiceImpl implements BoardService{
     public Long register(BoardDTO boardDTO) {
         // 변환 먼저하기.
         log.info("보드 서비스 구현체, 등록 과정 중에 변환된 boardDTO 확인 : " + boardDTO);
-        Board board = modelMapper.map(boardDTO, Board.class);
+        // 이전 버전
+//        Board board = modelMapper.map(boardDTO, Board.class);
+        // 보드 서비스의 디폴트 메서드 이용해서, 변환하기. dtoToEntity
+        Board board = dtoToEntity(boardDTO);
         log.info("보드 서비스 구현체, 등록 과정 중에 변환된 board 확인 : " + board);
         // 실제 디비에 쓰기 작업.
         Long bno = boardRepository.save(board).getBno();
@@ -63,6 +63,16 @@ public class BoardServiceImpl implements BoardService{
         Optional<Board> result = boardRepository.findById(boardDTO.getBno());
         Board board = result.orElseThrow();
         board.changTitleContent(boardDTO.getTitle(), boardDTO.getContent());
+
+        // 첨부된 파일 처리 해보기.
+        board.clearImages();
+        if (boardDTO.getFileNames() != null) {
+            for (String fileName : boardDTO.getFileNames()) {
+                String[] arr = fileName.split("_");
+                board.addImage(arr[0], arr[1]);
+            }
+        }
+// 첨부된 파일 처리 해보기.
         boardRepository.save(board);
     }
 
@@ -130,6 +140,26 @@ public class BoardServiceImpl implements BoardService{
                 .pageRequestDTO(pageRequestDTO)
                 .dtoList(result.getContent())
                 .total((int)result.getTotalElements())
+                .build();
+    }
+
+    // 기존 , 1) 페이징 2) 검색 3) 댓글 갯수 , 버전으로 목록 출력. 4) 첨부 이미지들
+    // 참고로 위에는 1) ~ 3) 구현이 된 상태임. 4) 번만 추가
+    @Override
+    public PageResponseDTO<BoardListAllDTO> listWithAll(PageRequestDTO pageRequestDTO) {
+        // 검색
+        String[] types = pageRequestDTO.getTypes();
+        String keyword = pageRequestDTO.getKeyword();
+        // 페이징 정보
+        Pageable pageable = pageRequestDTO.getPageable("bno");
+
+        // 준비물을 이용해서, 레포지토리에게 외주주기, 디비에서 데이터 가져오기 작업.
+        Page<BoardListAllDTO>result = boardRepository.searchWithAll(types, keyword, pageable);
+
+        return PageResponseDTO.<BoardListAllDTO>withAll()
+                .pageRequestDTO(pageRequestDTO)
+                .dtoList(result.getContent())
+                .total((int) result.getTotalElements())
                 .build();
     }
 }

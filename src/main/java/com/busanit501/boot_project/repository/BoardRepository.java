@@ -18,7 +18,8 @@ public interface BoardRepository extends JpaRepository<Board, Long> , BoardSearc
     // 질문 1개씩, 1개씩, 1개씩,
     // 식후, 그릇 치우기, 쟁반에 담아서 한번에 처리하자.
     // EntityGraph : 같이 로드 해야할 속성을 지정하기.
-    // qusrudtkgkdxptmxm
+    // 결론, 한번에 조인(두 테이블 붙이기, 여기서, 하나의 보드 테이블에, 속성 imageSet 요것만 붙힘.
+    //  보드 테이블  + imageSet 속성 붙여서, 조회를 한번만 함.
     @EntityGraph(attributePaths = {"imageSet"})
     @Query("select b from Board b where b.bno = :bno")
     Optional<Board> findByIdWithImages(Long bno);
