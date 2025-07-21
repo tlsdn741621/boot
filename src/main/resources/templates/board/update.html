@@ -23,7 +23,7 @@
                 </div>
                 <div class="card-body">
                     <!--                        폼 형식 작성하기-->
-                    <form id="f1" method="post" th:action="@{/board/update}" >
+                    <form id="f1" method="post" th:action="@{/board/update}">
                         <div class="mb-3">
                             <label for="bno" class="form-control">bno</label>
                             <input type="text" class="form-control" id="bno" name="bno"
@@ -32,7 +32,7 @@
                         <div class="mb-3">
                             <label for="title" class="form-control">제목</label>
                             <input type="text" class="form-control" id="title" name="title" placeholder="제목을 입력해주세요"
-                                   th:value="${dto.title}" >
+                                   th:value="${dto.title}">
                         </div>
                         <div class="mb-3">
                             <label for="content" class="form-control">내용</label>
@@ -78,15 +78,63 @@
                             <button type="button" class="btn btn-secondary listBtn">목록가기</button>
                             <button type="button" class="btn btn-danger removeBtn">삭제가기</button>
                         </div>
-
                     </form>
                 </div>
+            </div><!-- end card-->
+        </div><!-- end col-->
+    </div><!-- end row-->
+
+    <!--    첨부파일 섬네일 보여주는 화면 영역-->
+    <!--    글작성에서 사용했던 첨부파일 보여주는 영역 재사용-->
+    <div class="row mt-3">
+        <div class="col">
+            <div class="container-fluid d-flex uploadResult" style="flex-wrap: wrap;">
+                <!--                서버로부터 전달 받은 첨부 이미지들을 직접 보여주는 작업. -->
+                <th:block th:each="fileName : ${fileNames}">
+                    <div class="card col-4" th:with = "arr = ${fileName.split('_')}">
+                        <div class="card-header d-flex justify-content-center">
+                            [[${arr[1]]]
+                        </div>
+                        <button class="btn-sm btn-danger"
+                                th:onclick="removeFile([[${arr[0]}]],[[${arr[1]}]], this)"
+                        >X</button>
+                        <div class="card-body">
+                            <img th:src="|/view/s_${fileName}|" th:data-src="${fileName}">
+                        </div>
+                    </div>
+                </th:block>
 
             </div>
-
         </div>
     </div>
-</div>
+    <!--    첨부파일 섬네일 보여주는 화면 영역-->
+
+    <!--    첨부파일을 추가하는 영역-->
+    <!--    글작성에서 사용했던 첨부파일 추가 기능 재사용-->
+    <div class="modal uploadModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">이미지 첨부 파일</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group mb-3">
+                        <input type="file" name="files" class="form-control" multiple>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary uploadBtn">업로드</button>
+                    <button type="button" class="btn btn-secondary closeUploadBtn" data-bs-dismiss="modal">취소</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--    첨부파일을 추가하는 영역-->
+
+</div><!--end layout:fragment="content"-->
+
 <!--끝나는 부분 div layout:fragment="content"-->
 <!--자바스크립트 영역은 다른 영역이므로, 분리하기 , 주의-->
 <script layout:fragment="script" th:inline="javascript">
@@ -94,8 +142,8 @@
     const errors = [[${errors}]]
     console.log(errors)
     let errorMsg = ''
-    if(errors) {
-        for(let i = 0; i < errors.length; i++) {
+    if (errors) {
+        for (let i = 0; i < errors.length; i++) {
             errorMsg += `${errors[i].field}는 ${errors[i].code} \n`
         }
         alert(errorMsg)

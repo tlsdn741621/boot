@@ -78,12 +78,21 @@
                         </div>
 
                     </form>
+                </div><!--end card-body-->
+                <!--첨부된 이미지를 보여주는 화면 영역-->
+                <div class="col">
+                    <div class="card" th:if="${dto.fileNames != null && dto.fileNames.size() > 0}">
+                        <img class="card-img-top"
+                             th:each="fileName : ${dto.fileNames}"
+                             th:src="|/view/${fileName}|"
+                        >
+                    </div>
                 </div>
+                <!--첨부된 이미지를 보여주는 화면 영역-->
 
-            </div>
-
-        </div>
-    </div> <!--    end row-->
+            </div><!--end card-->
+        </div><!--end col-->
+    </div> <!--end row-->
     <!--    댓글 작성 폼 화면-->
     <div class="row mt-3">
         <div class="col-md-12">
@@ -262,7 +271,6 @@
     printReplies(1, 10, true)
 
 
-
     // 댓글 등록 모달 작업.
     const registerModal = new bootstrap.Modal(document.querySelector(".registerModal"))
 
@@ -275,18 +283,18 @@
     // 이벤트 처리 작업들.
     document.querySelector(".addReplyBtn").addEventListener("click", function (e) {
         registerModal.show()
-    },false)
+    }, false)
 
     closeRegBtn.addEventListener("click", function (e) {
         registerModal.hide()
-    },false)
+    }, false)
 
     // 댓글의 내용을 담아서, 서버에 전달하기.
     registerBtn.addEventListener("click", function (e) {
         const replyObj = {
-            bno : bno,
-            replyText : replyText.value,
-            replyer : replyer.value
+            bno: bno,
+            replyText: replyText.value,
+            replyer: replyer.value
         }
         // 비동기 처리, reply.js 에서, addReply 이용하기.
         addReply(replyObj).then(result => {
@@ -295,11 +303,11 @@
             replyText.value = ""
             replyer.value = ""
             // 댓글 작성 후, 맨 마지막 페이지 이동.
-            printReplies(1,10, true)
+            printReplies(1, 10, true)
         }).catch(e => {
             alert("예외가 발생했습니다.")
         })
-    },false)
+    }, false)
 
 
     // 수정하는 요소 선택 및, 이벤트 처리 작업.
@@ -320,14 +328,14 @@
 
         const target = e.target
 
-        if(!target || target.tagName != 'SPAN') {
+        if (!target || target.tagName != 'SPAN') {
             return
         }
 
         // rno 부분 정의하기.
         const rno = target.getAttribute("data-rno")
 
-        if(!rno) {
+        if (!rno) {
             return;
         }
 
@@ -344,7 +352,6 @@
     })
 
 
-
     // 댓글 페이지 번호 클릭시 이동 이벤트 작업.
     let page = 1
     let size = 10
@@ -354,13 +361,13 @@
 
         const target = e.target
 
-        if(!target || target.tagName != 'A') {
+        if (!target || target.tagName != 'A') {
             return
         }
         const pageNum = target.getAttribute("data-page")
         page = pageNum
-        printReplies(page,size)
-    },false)
+        printReplies(page, size)
+    }, false)
 
 
     // 댓글 수정해보기. 이벤트 리스너 작업,
@@ -368,10 +375,10 @@
     // 댓글의 내용을 담아서, 서버에 전달하기.
     modifyBtn.addEventListener("click", function (e) {
         const replyObj = {
-            bno : bno,
-            rno : replyHeader.innerHTML,
-            replyText : modifyText.value,
-            replyer : modifyReplyer.value // 임시로 연습용으로함, 나중에 변경 예정.
+            bno: bno,
+            rno: replyHeader.innerHTML,
+            replyText: modifyText.value,
+            replyer: modifyReplyer.value // 임시로 연습용으로함, 나중에 변경 예정.
         }
         // 비동기 처리, reply.js 에서, modifyReply 이용하기.
         modifyReply(replyObj).then(result => {
@@ -380,16 +387,16 @@
             modifyText.value = ""
             modifyReplyer.value = ""
             // 댓글 수정 후, 맨 마지막 페이지 이동.
-            printReplies(page,size)
+            printReplies(page, size)
         }).catch(e => {
             alert("예외가 발생했습니다.")
         })
-    },false)
+    }, false)
 
     // 수정 모달창 닫기.
     closeModifyBtn.addEventListener("click", function (e) {
         modifyModal.hide()
-    },false)
+    }, false)
 
 
     // 삭제 이벤트 리스너 추가하기. 위에 있는 수정 리스너를 재사용.
@@ -405,11 +412,11 @@
             modifyReplyer.value = ""
             // 댓글 삭제 후, 맨 첫 페이지 이동.
             page = 1
-            printReplies(page,size)
+            printReplies(page, size)
         }).catch(e => {
             alert("예외가 발생했습니다.")
         })
-    },false)
+    }, false)
 
     // 참고하기.
     // console.log(get1(bno))

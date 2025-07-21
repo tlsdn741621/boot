@@ -1,9 +1,6 @@
 package com.busanit501.boot_project.controller;
 
-import com.busanit501.boot_project.dto.BoardDTO;
-import com.busanit501.boot_project.dto.BoardListReplyCountDTO;
-import com.busanit501.boot_project.dto.PageRequestDTO;
-import com.busanit501.boot_project.dto.PageResponseDTO;
+import com.busanit501.boot_project.dto.*;
 import com.busanit501.boot_project.service.BoardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +26,9 @@ public class BoardController {
         // 1, 기존, 페이징 정보와, 검색 정보만 이용한 리스트 목록,
 //        PageResponseDTO<BoardDTO> responseDTO = boardService.list(pageRequestDTO);
         //2. 기존 + 댓글 갯수 포함 목록 정보.
-        PageResponseDTO<BoardListReplyCountDTO> responseDTO = boardService.listWithReplyCount(pageRequestDTO);
+//        PageResponseDTO<BoardListReplyCountDTO> responseDTO = boardService.listWithReplyCount(pageRequestDTO);
+        // 3. 1+2 정보 + 첨부 이미지들
+        PageResponseDTO<BoardListAllDTO> responseDTO = boardService.listWithAll(pageRequestDTO);
         log.info("BoardController에서, list, responseDTO : {}", responseDTO);
         // 서버 -> 화면으로 데이터 전달.
         model.addAttribute("responseDTO", responseDTO);
