@@ -2,8 +2,10 @@ package com.busanit501.boot_project.service;
 
 
 import com.busanit501.boot_project.domain.Board;
+import com.busanit501.boot_project.domain.Reply;
 import com.busanit501.boot_project.dto.*;
 import com.busanit501.boot_project.repository.BoardRepository;
+import com.busanit501.boot_project.repository.ReplyRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -26,6 +28,7 @@ public class BoardServiceImpl implements BoardService{
     // repository 에게 외주 주는 업무.
     private final ModelMapper modelMapper;// 변환 담당자
     private final BoardRepository boardRepository; // 실제 디비에 쓰는 작업하는 담당자
+    private final ReplyRepository replyRepository;
 
     @Override
     public Long register(BoardDTO boardDTO) {
@@ -78,6 +81,13 @@ public class BoardServiceImpl implements BoardService{
 
     @Override
     public void remove(Long bno) {
+        // 댓글이 있다면, 댓글을 먼저 삭제 후, 게시글 삭제하기.
+        List< Reply> result = replyRepository.findByBoardBno(bno);
+        boolean checkReplys = result.isEmpty() ? false : true;
+        if (checkReplys) {
+            replyRepository.deleteByBoard_Bno(bno);
+        }
+        // 게시글 삭제
         boardRepository.deleteById(bno);
     }
 

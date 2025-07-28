@@ -70,7 +70,9 @@
                                                             &page=1&keyword=1&type=twc-->
 
                             <a th:href="|@{/board/update}?bno=${dto.bno}&${link}|">
-                                <button type="button" class="btn btn-primary ">수정하기</button>
+                                <button type="button"
+                                        th:if="${user != null && user.Username == dto.writer}"
+                                        class="btn btn-primary ">수정하기</button>
                             </a>
                             <a th:href="|@{/board/list}?${link}|">
                                 <button type="button" class="btn btn-secondary">목록가기</button>
@@ -137,7 +139,7 @@
                         <span class="input-group-text">
                             작성자
                         </span>
-                        <input type="text" class="form-control replyer">
+                        <input type="text" class="form-control replyer" th:value="${user.Username}" readonly>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -170,7 +172,7 @@
                         <span class="input-group-text">
                             작성자
                         </span>
-                        <input type="text" class="form-control modifyReplyer">
+                        <input type="text" class="form-control modifyReplyer" readonly>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -191,6 +193,10 @@
 
 </div> <!--fragment content end-->
 <script layout:fragment="script" th:inline="javascript">
+
+    // 현재 로그인한 유저를 서버로부터 받아서 상수에 담아두기.
+    const currentUser = [[${user.Username}]]
+
     const bno = [[${dto.bno}]]
 
     const replyList = document.querySelector('.replyList')// 댓글 목록 가리킴
@@ -320,6 +326,8 @@
     const removeBtn = document.querySelector(".removeBtn")
     const closeModifyBtn = document.querySelector(".closeModifyBtn")
 
+    // 상태변수, 댓글작성자와 로그인한 유저의 일치 여부
+    let hasAuth = false
 
     // 댓글 목록에서, 댓글 클릭시, 댓글 상세보기 화면 이동 이벤트 작업.
     replyList.addEventListener("click", function (e) {
@@ -347,9 +355,11 @@
             modifyText.value = reply.replyText
             modifyReplyer.value = reply.replyer
             modifyModal.show()
+            // 댓글 작성자와 로그인한 유저의 일치 여부
+            hasAuth = currentUser === reply.replyer
 
         }).catch(e => alert("예외 발생."))
-    })
+    },false)
 
 
     // 댓글 페이지 번호 클릭시 이동 이벤트 작업.
@@ -374,6 +384,12 @@
     // 댓글 등록 과정과 비슷해서, 구조를 복사하고 수정하기.
     // 댓글의 내용을 담아서, 서버에 전달하기.
     modifyBtn.addEventListener("click", function (e) {
+        // 댓글 작성자와 , 로그인한 유저 일치 여부 검사
+        if(!hasAuth) {
+            alert("댓글 작성자만 수정 가능합니다.")
+            modifyModal.hide()
+            return
+        }
         const replyObj = {
             bno: bno,
             rno: replyHeader.innerHTML,
@@ -402,6 +418,12 @@
     // 삭제 이벤트 리스너 추가하기. 위에 있는 수정 리스너를 재사용.
     // removeBtn
     removeBtn.addEventListener("click", function (e) {
+        // 댓글 작성자와 , 로그인한 유저 일치 여부 검사
+        if(!hasAuth) {
+            alert("댓글 작성자만 삭제 가능합니다.")
+            modifyModal.hide()
+            return
+        }
 
         // 비동기 처리, reply.js 에서, removeReply 이용하기.
         // 모달창 헤더 부분에, 댓글의 번호 rno 있음.
