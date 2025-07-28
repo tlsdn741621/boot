@@ -50,4 +50,8 @@ public class MemberController {
         return "redirect:/member/login";
     }
 
+    // 회원 수정 화면, 임시 화면, 더미
+    @GetMapping("/modify")
+    public void modifyGet() {}
+
 }

@@ -2,6 +2,7 @@ package com.busanit501.boot_project.config;
 
 import com.busanit501.boot_project.security.CustomUserDetailsService;
 import com.busanit501.boot_project.security.handler.Custom403Handler;
+import com.busanit501.boot_project.security.handler.CustomSocialLoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -73,10 +74,10 @@ public class CustomSecurityConfig {
                 authorizeRequests -> {
                     authorizeRequests.requestMatchers
                             ("/css/**", "/js/**","/images/**",
-                                    "/member/login","/member/join", "/board/list"
-//                                    "http://localhost:8080/login/oauth2/code/kakao",
-//                                    "https://kauth.kakao.com",
-//                                    "https://kapi.kakao.com"
+                                    "/member/login","/member/join", "/board/list",
+                                    "http://localhost:8080/login/oauth2/code/kakao",
+                                    "https://kauth.kakao.com",
+                                    "https://kapi.kakao.com"
                             ).permitAll();
                     authorizeRequests.requestMatchers
                             ("/board/register").authenticated();
@@ -124,13 +125,13 @@ public class CustomSecurityConfig {
                 });
 
         //카카오 로그인 API 설정
-//        http.oauth2Login(
-//                oauthLogin -> {
-//                    oauthLogin.loginPage("/member/login");
-//                    // 카카오 로그인 후 , 후처리 적용하기.
-//                    oauthLogin.successHandler(authenticationSuccessHandler());
-//                }
-//        );
+        http.oauth2Login(
+                oauthLogin -> {
+                    oauthLogin.loginPage("/member/login");
+                    // 카카오 로그인 후 , 후처리 적용하기.
+                    oauthLogin.successHandler(authenticationSuccessHandler());
+                }
+        );
 
 
 
@@ -174,10 +175,10 @@ public class CustomSecurityConfig {
     }
 
     // 소셜 로그인 후, 후처리 추가, 설정,
-//    @Bean
-//    public AuthenticationSuccessHandler authenticationSuccessHandler() {
-//        return new CustomSocialLoginSuccessHandler(passwordEncoder());
-//    }
+    @Bean
+    public AuthenticationSuccessHandler authenticationSuccessHandler() {
+        return new CustomSocialLoginSuccessHandler(passwordEncoder());
+    }
 
 
 

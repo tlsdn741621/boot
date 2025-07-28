@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.annotation.Commit;
 
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -40,12 +41,21 @@ public class MemberRepositoryTests {
 
     @Test
     public void testRead() {
-    Optional<Member> result = memberRepository.getWithRoles("member100");
-    Member member = result.orElseThrow();
-    log.info(member);
-    log.info(member.getRoleSet());
+        Optional<Member> result = memberRepository.getWithRoles("member100");
+        Member member = result.orElseThrow();
+        log.info(member);
+        log.info(member.getRoleSet());
 
-    member.getRoleSet().forEach(role -> log.info(role.name()));
+        member.getRoleSet().forEach(role -> log.info(role.name()));
     }
+
+    @Commit
+    @Test
+    public void testUpdate() {
+        String mid = "tlsdn7416@naver.com";
+        String mpw = passwordEncoder.encode("123456");
+        memberRepository.updatePassword(mpw, mid);
+    }
+
 
 }
